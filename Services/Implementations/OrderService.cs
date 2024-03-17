@@ -13,12 +13,25 @@ namespace TestTask.Services.Implementations
         {
             _dbContext = dbContext;
         }
-        public async Task<Order?> GetOrder()
+        public async Task<Order> GetOrder()
         {
             var orderWithHighestTotalPrice = await _dbContext.Orders
                 .OrderByDescending(o => o.Price * o.Quantity)
-                .Include(o => o.User)
+                .Select(o => new Order
+                {
+                    Id = o.Id,
+                    Price = o.Price,
+                    Quantity = o.Quantity,
+                    User = new User
+                    {
+                        Id = o.User.Id,
+                        Email = o.User.Email
+                    }
+                })
                 .FirstOrDefaultAsync();
+
+            if (orderWithHighestTotalPrice == null)
+                return new Order();
 
             return orderWithHighestTotalPrice;
         }

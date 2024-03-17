@@ -9,29 +9,29 @@ namespace TestTask.Services.Implementations
     public class UserService : IUserService
     {
         private readonly ApplicationDbContext _dbContext;
-        private DbSet<User> _user;
 
         public UserService(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
-            _user = dbContext.Users;
         }
 
         public async Task<User> GetUser()
         {
-            try
-            {
-                var userWithMostOrders = await _dbContext.Users
-                    .Include(u => u.Orders)
-                    .OrderByDescending(u => u.Orders.Count)
-                    .FirstOrDefaultAsync();
+            var userWithMostOrders = await _dbContext.Users
+                .Select(u => new User
+                    {
+                    Id = u.Id,
+                    Email = u.Email,
+                    Orders = u.Orders,
+                })
+                .OrderByDescending(u => u.Orders.Count)
+                .FirstOrDefaultAsync();
 
-                return userWithMostOrders;
-            }
-            catch (Exception)
-            {
+            if (userWithMostOrders == null)
                 return new User();
-            }
+
+            return userWithMostOrders;
+
         }
 
         public async Task<List<User>> GetUsers()
